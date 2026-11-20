@@ -10,3 +10,5 @@ logs/
 appsettings.Development.json
 .DS_Store
 *.log
+# 发布产物
+publish/

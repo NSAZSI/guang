@@ -15,11 +15,11 @@ test('挂机 10 分钟：心跳保活 + 控制台零报错', async ({ page }) =>
 
   await page.waitForTimeout(600000) // 真实挂机 10 分钟
 
-  // 快讯条仍在且连接未断（hello + 约 40 次 ping）
+  // 快讯条仍在且心跳持续（600s / 15s ≈ 40 次 ping，断言 ≥35 留容差）
   const dbg = await page.evaluate(() => (window as any).__adpulseFlash)
-  expect(dbg.count).toBeGreaterThanOrEqual(35)
+  expect(dbg.pings).toBeGreaterThanOrEqual(35)
   expect(Date.now() - dbg.lastEvent).toBeLessThan(20000)
   await expect(page.locator('.flash .dot.off')).toHaveCount(0)
   expect(errors, `控制台报错：${errors.join(' | ')}`).toHaveLength(0)
-  console.log(`10 分钟挂机通过：收到 ${dbg.count} 个事件，控制台 0 报错`)
+  console.log(`10 分钟挂机通过：收到 ${dbg.pings} 次心跳，控制台 0 报错`)
 })

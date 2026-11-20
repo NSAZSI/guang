@@ -12,6 +12,7 @@ let es: EventSource | null = null
 let watchdog = 0
 let cycle = 0
 let lastEvent = Date.now()
+let pings = 0
 
 const url = (import.meta.env.VITE_API_BASE || '/api') + '/sse/newsflash'
 
@@ -19,7 +20,7 @@ function connect() {
   es?.close()
   es = new EventSource(url)
   es.addEventListener('hello', () => { connected.value = true; lastEvent = Date.now() })
-  es.addEventListener('ping', () => { lastEvent = Date.now() })
+  es.addEventListener('ping', () => { pings++; lastEvent = Date.now() })
   es.addEventListener('news', (e) => {
     lastEvent = Date.now()
     try {
@@ -43,6 +44,7 @@ onMounted(() => {
   ;(window as unknown as Record<string, unknown>).__adpulseFlash = {
     get lastEvent() { return lastEvent },
     get count() { return items.value.length },
+    get pings() { return pings },
     reconnect: connect
   }
 })

@@ -21,11 +21,11 @@ COVER_TPL = """<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" 
 </radialGradient></defs>
 <rect width="800" height="450" fill="url(#g)"/><rect width="800" height="450" fill="url(#r)"/>
 <text x="620" y="400" font-family="Arial, sans-serif" font-size="220" font-weight="800" fill="{accent}" opacity="0.16" text-anchor="middle">{num:02d}</text>
-<rect x="48" y="52" width="10" height="10" fill="{accent}"/>
-<text x="72" y="62" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="22" fill="#E8EAF0" opacity="0.9">AdPulse · 广告脉搏</text>
 <text x="48" y="250" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="52" font-weight="700" fill="#F5F7FA">{cat}</text>
 <text x="48" y="300" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="24" fill="#9AA3B8">行业情报 · 演示封面</text>
 <rect x="48" y="330" width="120" height="4" fill="{accent}"/>
+<rect x="48" y="392" width="8" height="8" fill="{accent}"/>
+<text x="66" y="400" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="18" fill="#E8EAF0" opacity="0.7">AdPulse · 广告脉搏</text>
 </svg>"""
 
 BANNER_TPL = """<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="640" viewBox="0 0 1600 640">
@@ -35,12 +35,11 @@ BANNER_TPL = """<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="640
 <stop offset="0" stop-color="{accent}" stop-opacity="0.6"/><stop offset="0.6" stop-color="{accent}" stop-opacity="0.08"/><stop offset="1" stop-color="{accent}" stop-opacity="0"/>
 </radialGradient></defs>
 <rect width="1600" height="640" fill="url(#g)"/><rect width="1600" height="640" fill="url(#r)"/>
-<rect x="90" y="120" width="14" height="14" fill="{accent}"/>
-<text x="122" y="133" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="28" fill="#E8EAF0" opacity="0.9">AdPulse 头条 · {cat}</text>
-<text x="90" y="330" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="64" font-weight="800" fill="#F5F7FA">{line1}</text>
-<text x="90" y="420" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="64" font-weight="800" fill="#F5F7FA">{line2}</text>
-<rect x="90" y="470" width="180" height="6" fill="{accent}"/>
-<text x="90" y="540" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="26" fill="#9AA3B8">演示数据 · 点击查看全文</text>
+<!-- 纯背景：标题由页面叠加渲染，图中不放文字，避免手机端裁切与重叠 -->
+<circle cx="1180" cy="210" r="260" fill="none" stroke="{accent}" stroke-opacity="0.22" stroke-width="2"/>
+<circle cx="1180" cy="210" r="170" fill="none" stroke="{accent}" stroke-opacity="0.14" stroke-width="2"/>
+<circle cx="1180" cy="210" r="80" fill="{accent}" fill-opacity="0.10"/>
+<path d="M0 520 C 320 440, 640 600, 960 500 S 1440 420, 1600 470 L1600 640 L0 640 Z" fill="{accent}" fill-opacity="0.07"/>
 </svg>"""
 
 for i in range(1, 31):
@@ -55,6 +54,6 @@ banners = [
 ]
 for i, (cat, accent, dark, l1, l2) in enumerate(banners, 1):
     with open(os.path.join(OUT, f"banner-{i}.svg"), "w", encoding="utf-8") as f:
-        f.write(BANNER_TPL.format(cat=cat, accent=accent, dark=dark, line1=l1, line2=l2))
+        f.write(BANNER_TPL.format(cat=cat, accent=accent, dark=dark))
 
 print("covers generated:", len(os.listdir(OUT)))

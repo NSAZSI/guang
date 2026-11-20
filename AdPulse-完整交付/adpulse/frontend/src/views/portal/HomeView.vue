@@ -114,9 +114,9 @@ onBeforeUnmount(() => clearInterval(timer))
 .hero-track { display: flex; transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
 .slide { position: relative; flex: 0 0 100%; display: block; }
 .slide img { width: 100%; height: 380px; object-fit: cover; }
-.slide-mask { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(5, 7, 12, 0.85)); }
-.slide-text { position: absolute; left: 28px; right: 28px; bottom: 26px; display: flex; flex-direction: column; gap: 10px; }
-.slide-text h2 { margin: 0; color: #f5f7fa; font-size: 26px; line-height: 1.4; font-weight: 800; }
+.slide-mask { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(5, 7, 12, 0.85)); }
+.slide-text { position: absolute; left: 28px; right: 28px; bottom: 26px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.slide-text h2 { margin: 0; color: #f5f7fa; font-size: 26px; line-height: 1.4; font-weight: 800; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .dots { position: absolute; right: 22px; top: 18px; display: flex; gap: 7px; }
 .dots button { width: 8px; height: 8px; border-radius: 999px; border: none; background: rgba(255, 255, 255, 0.4); cursor: pointer; transition: all 0.25s; padding: 0; }
 .dots button.on { width: 22px; background: var(--accent); }

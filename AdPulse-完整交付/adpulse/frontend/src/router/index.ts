@@ -14,7 +14,9 @@ const router = createRouter({
         { path: '', name: 'home', component: () => import('@/views/portal/HomeView.vue') },
         { path: 'news', name: 'news', component: () => import('@/views/portal/NewsListView.vue') },
         { path: 'news/:id(\\d+)', name: 'detail', component: () => import('@/views/portal/NewsDetailView.vue') },
-        { path: 'data', name: 'data', component: () => import('@/views/portal/DataView.vue') }
+        { path: 'data', name: 'data', component: () => import('@/views/portal/DataView.vue') },
+        // 项目介绍：整屏嵌入静态文档，不显示页脚
+        { path: 'intro', name: 'intro', component: () => import('@/views/portal/IntroView.vue'), meta: { immersive: true } }
       ]
     },
     { path: '/admin/login', name: 'admin-login', component: () => import('@/views/admin/LoginView.vue') },

@@ -35,7 +35,7 @@ public class AiGenerationService(
                 var ai = scope.ServiceProvider.GetRequiredService<IAiSummaryService>();
                 var n = await db.News.Include(x => x.NewsTags)
                     .FirstOrDefaultAsync(x => x.Id == newsId, stoppingToken);
-                if (n is null || n.Status != NewsStatus.Published) continue;
+                if (n is null || n.Status == NewsStatus.Recycled) continue; // 草稿也可生成，回收站跳过
 
                 AiResult result;
                 string status;

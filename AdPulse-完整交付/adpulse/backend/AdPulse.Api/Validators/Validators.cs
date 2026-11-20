@@ -18,10 +18,11 @@ public class SaveNewsValidator : AbstractValidator<SaveNewsRequest>
     {
         RuleFor(x => x.Title).NotEmpty().WithMessage("标题不能为空")
             .MaximumLength(200).WithMessage("标题不能超过 200 字");
-        RuleFor(x => x.Summary).NotEmpty().WithMessage("摘要不能为空")
-            .MaximumLength(300).WithMessage("摘要不能超过 300 字");
+        // 草稿允许摘要/封面暂空（便于先存稿再用 AI 生成摘要）；发布时必填
+        RuleFor(x => x.Summary).NotEmpty().When(x => x.Publish).WithMessage("发布前请填写摘要");
+        RuleFor(x => x.Summary).MaximumLength(300).WithMessage("摘要不能超过 300 字");
         RuleFor(x => x.Content).NotEmpty().WithMessage("正文不能为空");
-        RuleFor(x => x.CoverUrl).NotEmpty().WithMessage("请上传封面图");
+        RuleFor(x => x.CoverUrl).NotEmpty().When(x => x.Publish).WithMessage("发布前请上传封面图");
         RuleFor(x => x.CategoryId).GreaterThan(0).WithMessage("请选择分类");
         RuleFor(x => x.TagIds).NotNull().WithMessage("标签列表不能为空");
     }

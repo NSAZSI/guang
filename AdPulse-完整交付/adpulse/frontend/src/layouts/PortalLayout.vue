@@ -11,7 +11,8 @@ const drawer = ref(false)
 const links = [
   { to: '/', label: '首页' },
   { to: '/news', label: '新闻' },
-  { to: '/data', label: '行业数据' }
+  { to: '/data', label: '行业数据' },
+  { to: '/intro', label: '项目介绍' }
 ]
 const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.startsWith(to))
 </script>
@@ -50,7 +51,7 @@ const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.s
       </div>
     </el-drawer>
 
-    <main class="main">
+    <main class="main" :class="{ immersive: route.meta.immersive }">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -58,7 +59,7 @@ const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.s
       </router-view>
     </main>
 
-    <footer class="footer">
+    <footer v-if="!route.meta.immersive" class="footer">
       <div class="container">
         <div class="foot-brand"><span class="pulse"></span> AdPulse · 广告脉搏</div>
         <p class="muted">面试演示作品 · 所有新闻与行业数据均为演示样例，不代表真实事件与统计</p>
@@ -86,6 +87,7 @@ const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.s
 .admin-link:hover { color: var(--accent); border-color: var(--accent); }
 .mobile-menu { display: none; }
 .main { padding-top: 102px; min-height: calc(100vh - 180px); }
+.main.immersive { min-height: 0; }
 .footer { margin-top: 64px; border-top: 1px solid var(--line); padding: 30px 0 36px; }
 .foot-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-strong); margin-bottom: 10px; }
 .footer p { margin: 4px 0; font-size: 13px; }

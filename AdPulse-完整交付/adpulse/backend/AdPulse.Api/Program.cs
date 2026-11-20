@@ -178,6 +178,14 @@ try
         db.Database.Migrate();
         db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
         DbSeeder.Seed(db);
+
+        // 内存队列在重启后会丢失：把仍处于 Pending 的新闻（草稿或已发布）重新投递，避免永久卡在“生成中”
+        var aiQueue = scope.ServiceProvider.GetRequiredService<AiTaskQueue>();
+        var pendingIds = db.News
+            .Where(n => n.Status != NewsStatus.Recycled && n.AiStatus == AiStatus.Pending)
+            .Select(n => n.Id).ToList();
+        foreach (var id in pendingIds) aiQueue.Enqueue(id);
+        if (pendingIds.Count > 0) Log.Information("恢复 {Count} 条待生成 AI 摘要任务", pendingIds.Count);
     }
 
     app.UseMiddleware<ExceptionMiddleware>();

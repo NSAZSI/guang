@@ -11,8 +11,9 @@ public class AiOptions
     public string? BaseUrl { get; set; }
     public string? ApiKey { get; set; }
     public string? Model { get; set; }
-    public int MaxTokens { get; set; } = 300;
-    public int TimeoutSeconds { get; set; } = 30;
+    // 推理型模型会先消耗“思考”token 再输出正文；预算过小会导致正文被截断（finish_reason=length）
+    public int MaxTokens { get; set; } = 2000;
+    public int TimeoutSeconds { get; set; } = 60;
     public bool Enabled => !string.IsNullOrWhiteSpace(BaseUrl) && !string.IsNullOrWhiteSpace(ApiKey);
 }
 
@@ -73,8 +74,26 @@ public partial class OpenAiSummaryService(
         }
 
         using var doc = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(ct));
-        var raw = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "";
+        var choice = doc.RootElement.GetProperty("choices")[0];
+        var finish = choice.TryGetProperty("finish_reason", out var fr) ? fr.GetString() : null;
+        var raw = choice.GetProperty("message").GetProperty("content").GetString() ?? "";
+        if (finish == "length")
+            logger.LogWarning("AI 输出因 max_tokens={Max} 被截断，可调大 Ai:MaxTokens", _opt.MaxTokens);
         return ParseResult(raw);
+    }
+
+    public const int SummaryMaxLength = 60;
+
+    /// <summary>超长时在 limit 以内最后一个句读处截断，避免半句话；找不到句读再硬截。</summary>
+    internal static string TrimToSentence(string text, int limit)
+    {
+        text = text.Trim();
+        if (text.Length <= limit) return text;
+        var cut = text[..limit];
+        var end = cut.LastIndexOfAny(new[] { '。', '！', '？', '；' });
+        if (end >= limit / 2) return cut[..(end + 1)];
+        var comma = cut.LastIndexOfAny(new[] { '，', '、', ',' });
+        return comma >= limit / 2 ? cut[..comma] + "。" : cut;
     }
 
     /// <summary>容错解析：剥掉 markdown 代码块包裹，截取首个完整 JSON 对象（计划 8 常见坑）。</summary>
@@ -96,7 +115,7 @@ public partial class OpenAiSummaryService(
             }
 
         if (summary.Length == 0) throw new AiCallException("AI 摘要为空");
-        if (summary.Length > 60) summary = summary[..60];
+        summary = TrimToSentence(summary, SummaryMaxLength);
         if (tags.Count == 0) throw new AiCallException("AI 标签为空");
         return new AiResult(summary, tags.Take(5).ToList());
     }
@@ -123,12 +142,10 @@ public static partial class RuleEngine
 
     public static AiResult Generate(string title, string content)
     {
+        // 规则摘要：取正文首句，控制在 60 字内并在句读处收尾；正文为空时退回标题
         var plain = StripHtml(content);
-        var sentences = Regex.Split(plain, @"(?<=[。！？!?])")
-            .Where(s => s.Trim().Length > 0).Take(2).ToArray();
-        var summary = string.Join("", sentences).Trim();
-        if (summary.Length == 0) summary = title;
-        if (summary.Length > 80) summary = summary[..80] + "…";
+        var first = Regex.Split(plain, @"(?<=[。！？!?])").FirstOrDefault(s => s.Trim().Length > 0)?.Trim() ?? "";
+        var summary = first.Length == 0 ? title : OpenAiSummaryService.TrimToSentence(first, OpenAiSummaryService.SummaryMaxLength);
 
         var corpus = title + " " + plain;
         var tags = Lexicon

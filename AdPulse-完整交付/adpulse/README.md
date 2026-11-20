@@ -94,13 +94,13 @@ npm run dev
   "BaseUrl": "https://ark.cn-beijing.volces.com/api/v3",
   "ApiKey": "<你的密钥，严禁提交进 Git>",
   "Model": "<接入点/模型名>",
-  "MaxTokens": 300,
-  "TimeoutSeconds": 30
+  "MaxTokens": 2000,
+  "TimeoutSeconds": 60
 }
 ```
 
 - 兼容任何 OpenAI 协议端点：豆包方舟、DeepSeek、Dify 等。
-- **不配密钥**：自动走规则小编（正文前两句 ≤80 字 + 行业词库高频标签），详情页诚实标注"规则生成"。
+- **不配密钥**：自动走规则小编（正文首句 ≤60 字，在句读处收尾 + 行业词库高频标签），详情页诚实标注"规则生成"。
 - **调用失败/超时**：重试 1 次后降级规则兜底，状态 Failed，Serilog 记警告；发布主流程完全不受影响。
 - 本地验收可用 `python3 tools/mock_ai_server.py` 起一个 OpenAI 兼容 mock（端口 5099），
   以 `Ai__BaseUrl=http://127.0.0.1:5099/v1 Ai__ApiKey=mock-good-key` 启动后端即可走通 AI 路径。

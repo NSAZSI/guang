@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <None Update="Data/industry-stats.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Data/seed-news-body.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

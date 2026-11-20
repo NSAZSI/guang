@@ -5,10 +5,9 @@
 <stop offset="0" stop-color="#38BDF8" stop-opacity="0.6"/><stop offset="0.6" stop-color="#38BDF8" stop-opacity="0.08"/><stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
 </radialGradient></defs>
 <rect width="1600" height="640" fill="url(#g)"/><rect width="1600" height="640" fill="url(#r)"/>
-<rect x="90" y="120" width="14" height="14" fill="#38BDF8"/>
-<text x="122" y="133" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="28" fill="#E8EAF0" opacity="0.9">AdPulse 头条 · 数字广告</text>
-<text x="90" y="330" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="64" font-weight="800" fill="#F5F7FA">数字广告投放规模增长 18%</text>
-<text x="90" y="420" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="64" font-weight="800" fill="#F5F7FA">短视频媒介占比首次过半</text>
-<rect x="90" y="470" width="180" height="6" fill="#38BDF8"/>
-<text x="90" y="540" font-family="'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif" font-size="26" fill="#9AA3B8">演示数据 · 点击查看全文</text>
+<!-- 纯背景：标题由页面叠加渲染，图中不放文字，避免手机端裁切与重叠 -->
+<circle cx="1180" cy="210" r="260" fill="none" stroke="#38BDF8" stroke-opacity="0.22" stroke-width="2"/>
+<circle cx="1180" cy="210" r="170" fill="none" stroke="#38BDF8" stroke-opacity="0.14" stroke-width="2"/>
+<circle cx="1180" cy="210" r="80" fill="#38BDF8" fill-opacity="0.10"/>
+<path d="M0 520 C 320 440, 640 600, 960 500 S 1440 420, 1600 470 L1600 640 L0 640 Z" fill="#38BDF8" fill-opacity="0.07"/>
 </svg>

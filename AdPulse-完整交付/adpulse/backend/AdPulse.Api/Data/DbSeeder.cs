@@ -9,6 +9,9 @@ namespace AdPulse.Api.Data;
 /// </summary>
 public static class DbSeeder
 {
+    /// <summary>封面版本号：重新生成封面图后递增，让浏览器绕过 7 天的静态缓存。</summary>
+    public const int CoverVersion = 2;
+
     private record SeedItem(string Title, int Cat, int[] Tags, string Summary, string[] Body,
         string Status = NewsStatus.Published, bool Headline = false, bool Top = false);
 
@@ -231,17 +234,19 @@ public static class DbSeeder
 
         var rnd = new Random(42);
         var now = DateTime.UtcNow;
+        var expanded = LoadExpandedBodies();
         var newsList = new List<News>();
         for (var i = 0; i < items.Length; i++)
         {
             var it = items[i];
             var published = it.Status != NewsStatus.Draft;
+            var body = expanded.TryGetValue(it.Title, out var full) && full.Length > 0 ? full : it.Body;
             var news = new News
             {
                 Title = it.Title,
                 Summary = it.Summary,
-                Content = string.Join("", it.Body.Select(p => $"<p>{p}</p>")),
-                CoverUrl = $"/covers/cover-{i + 1:00}.svg",
+                Content = RenderBody(body),
+                CoverUrl = $"/covers/cover-{i + 1:00}.svg?v={CoverVersion}",
                 CategoryId = categories[it.Cat - 1].Id,
                 AuthorId = i % 3 == 0 ? editor.Id : admin.Id,
                 Status = it.Status,
@@ -251,6 +256,8 @@ public static class DbSeeder
                 PublishedAt = published ? now.AddDays(-rnd.Next(1, 60)).AddHours(-rnd.Next(0, 23)) : null,
                 CreatedAt = now.AddDays(-rnd.Next(60, 90)),
                 UpdatedAt = now.AddDays(-rnd.Next(0, 10)),
+                // 已发布的示例新闻在启动后由 AI 队列生成摘要（无密钥时走规则小编）
+                AiStatus = it.Status == NewsStatus.Published ? AiStatus.Pending : AiStatus.None,
             };
             foreach (var t in it.Tags) news.NewsTags.Add(new NewsTag { TagId = tags[t - 1].Id });
             newsList.Add(news);
@@ -263,9 +270,9 @@ public static class DbSeeder
         db.SaveChanges();
 
         db.Banners.AddRange(
-            new Banner { ImageUrl = "/covers/banner-1.svg", LinkNewsId = newsList[0].Id, SortOrder = 1 },
-            new Banner { ImageUrl = "/covers/banner-2.svg", LinkNewsId = newsList[1].Id, SortOrder = 2 },
-            new Banner { ImageUrl = "/covers/banner-3.svg", LinkNewsId = newsList[2].Id, SortOrder = 3 });
+            new Banner { ImageUrl = "/covers/banner-1.svg?v=" + CoverVersion, LinkNewsId = newsList[0].Id, SortOrder = 1 },
+            new Banner { ImageUrl = "/covers/banner-2.svg?v=" + CoverVersion, LinkNewsId = newsList[1].Id, SortOrder = 2 },
+            new Banner { ImageUrl = "/covers/banner-3.svg?v=" + CoverVersion, LinkNewsId = newsList[2].Id, SortOrder = 3 });
 
         // 近 30 天浏览日志，供看板趋势图使用
         var publishedIds = newsList.Where(n => n.Status == NewsStatus.Published).Select(n => n.Id).ToArray();
@@ -281,4 +288,21 @@ public static class DbSeeder
         db.OperationLogs.Add(new OperationLog { UserId = admin.Id, UserName = admin.UserName, Action = "系统初始化", Target = "数据库", Detail = "种子数据灌入：30 条演示新闻、5 分类、12 标签、3 轮播" });
         db.SaveChanges();
     }
+
+    /// <summary>扩写版正文（Data/seed-news-body.json，按标题索引）；文件缺失时回退到上面的简版正文。</summary>
+    private static Dictionary<string, string[]> LoadExpandedBodies()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Data", "seed-news-body.json");
+        if (!File.Exists(path)) return new();
+        return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string[]>>(File.ReadAllText(path)) ?? new();
+    }
+
+    /// <summary>段落渲染：“### ”开头为小标题，“> ”开头为引语，其余为普通段落。</summary>
+    internal static string RenderBody(IEnumerable<string> paragraphs) => string.Concat(paragraphs.Select(p =>
+    {
+        var t = p.Trim();
+        if (t.StartsWith("### ")) return $"<h3>{System.Net.WebUtility.HtmlEncode(t[4..].Trim())}</h3>";
+        if (t.StartsWith("> ")) return $"<blockquote><p>{System.Net.WebUtility.HtmlEncode(t[2..].Trim())}</p></blockquote>";
+        return $"<p>{System.Net.WebUtility.HtmlEncode(t)}</p>";
+    }));
 }

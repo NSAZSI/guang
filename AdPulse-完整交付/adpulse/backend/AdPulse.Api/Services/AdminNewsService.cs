@@ -136,6 +136,8 @@ public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbC
                 EnsureOwnership(n, user);
                 if (n.Status == NewsStatus.Published) throw ApiException.BadRequest("该新闻已是发布状态");
                 if (n.Status == NewsStatus.Recycled) throw ApiException.BadRequest("请先从回收站还原");
+                if (string.IsNullOrWhiteSpace(n.Summary) || string.IsNullOrWhiteSpace(n.CoverUrl))
+                    throw ApiException.BadRequest("发布前请先补全摘要与封面图");
                 n.Status = NewsStatus.Published; n.PublishedAt = DateTime.UtcNow;
                 n.AiStatus = AiStatus.Pending;
                 break;
@@ -178,12 +180,12 @@ public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbC
 
     public Task DeleteAsync(ClaimsPrincipal user, int id) => ChangeStatusAsync(user, id, "recycle");
 
-    /// <summary>手动重新生成 AI 摘要（计划 8.2）：仅作者或 Admin；立即返回 Pending，后台队列异步完成。</summary>
+    /// <summary>手动重新生成 AI 摘要（计划 8.2）：仅作者或 Admin；草稿与已发布均可；立即返回 Pending，后台队列异步完成。</summary>
     public async Task<object> RegenAiAsync(ClaimsPrincipal user, int id)
     {
         var n = await news.Query().FirstOrDefaultAsync(x => x.Id == id) ?? throw ApiException.NotFound("新闻不存在");
         EnsureOwnership(n, user);
-        if (n.Status != NewsStatus.Published) throw ApiException.BadRequest("仅已发布新闻可生成 AI 摘要");
+        if (n.Status == NewsStatus.Recycled) throw ApiException.BadRequest("回收站中的新闻请先还原再生成 AI 摘要");
         n.AiStatus = AiStatus.Pending;
         n.UpdatedAt = DateTime.UtcNow;
         Log(user, "重新生成AI摘要", id, n.Title);

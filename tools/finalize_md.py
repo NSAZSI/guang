@@ -25,14 +25,14 @@ def main():
     with open(MD, encoding="utf-8") as f:
         lines = f.readlines()
 
-    # 定位步骤7章节范围
-    start = next(i for i, l in enumerate(lines) if l.startswith("## 9."))
-    end = next(i for i, l in enumerate(lines) if i > start and l.startswith("## 10."))
+    # 定位步骤7章节范围（标题可能已被划掉：## ~~9. ...）
+    start = next(i for i, l in enumerate(lines) if l.startswith("## 9.") or l.startswith("## ~~9."))
+    end = next(i for i, l in enumerate(lines) if i > start and (l.startswith("## 10.") or l.startswith("## ~~10.")))
 
     for i in range(start, end):
         l = lines[i]
         # 章节标题备注改为如实表述
-        if l.startswith("## 9.") and "已执行并验收通过" in l:
+        if (l.startswith("## 9.") or l.startswith("## ~~9.")) and "已执行并验收通过" in l:
             lines[i] = l.replace("（✅ 已执行并验收通过）",
                                  "（✅ 本地可验证项全部通过；6 项公网/服务器操作待真实服务器执行，均已完成等效验证）")
         if l.startswith("###") and "验收清单" in l and "全部通过" in l:

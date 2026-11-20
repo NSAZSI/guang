@@ -43,12 +43,18 @@ def strike_line(line: str) -> str:
     return "~~" + s + "~~\n"
 
 
+def find_header(lines, header, after=0):
+    """兼容已划掉的标题（划掉后编号会进入 ~~ 内部）。"""
+    alt = header.replace("## ", "## ~~")
+    return next(i for i, l in enumerate(lines) if i > after and (l.startswith(header) or l.startswith(alt)))
+
+
 def main(step: int):
     with open(MD, encoding="utf-8") as f:
         lines = f.readlines()
 
-    start = next(i for i, l in enumerate(lines) if l.startswith(SECTION_HEADERS[step]))
-    end = next(i for i, l in enumerate(lines) if i > start and l.startswith(NEXT_HEADERS[step]))
+    start = find_header(lines, SECTION_HEADERS[step])
+    end = find_header(lines, NEXT_HEADERS[step], after=start)
 
     in_fence = False
     for i in range(start, end):

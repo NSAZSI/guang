@@ -12,3 +12,4 @@ appsettings.Development.json
 *.log
 # 发布产物
 publish/
+tests/test-results/

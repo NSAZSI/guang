@@ -1,0 +1,27 @@
+# /etc/systemd/system/adpulse-api.service
+# 启用：sudo systemctl daemon-reload && sudo systemctl enable --now adpulse-api
+# 查看：sudo systemctl status adpulse-api ｜ 日志：journalctl -u adpulse-api -f
+[Unit]
+Description=AdPulse API (ASP.NET Core 10)
+After=network.target
+
+[Service]
+WorkingDirectory=/var/adpulse/api
+ExecStart=/usr/bin/dotnet /var/adpulse/api/AdPulse.Api.dll
+Restart=always
+RestartSec=5
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+Environment=ConnectionStrings__Default=Data Source=/var/adpulse/data/adpulse.db
+Environment=UploadPath=/var/adpulse/uploads
+Environment=Serilog__Path=/var/adpulse/logs/adpulse-.log
+# 下面两个密钥务必替换为服务器专用值，不要复用开发密钥
+Environment=Jwt__Key=在这里放服务器专用的长随机密钥至少32字符
+# AI 可选：不配则自动降级为规则摘要（网站照常运行）
+Environment=Ai__BaseUrl=
+Environment=Ai__ApiKey=
+Environment=Ai__Model=
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

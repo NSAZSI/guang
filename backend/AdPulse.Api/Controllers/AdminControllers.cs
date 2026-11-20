@@ -41,9 +41,9 @@ public class AdminNewsController(AdminNewsService svc) : ControllerBase
         return ApiResponse.Ok();
     }
 
-    /// <summary>AI 摘要：步骤 6 实现，当前返回未启用占位。</summary>
+    /// <summary>AI 摘要手动重新生成（步骤 6）：异步队列处理，立即返回 Pending。</summary>
     [HttpPost("{id:int}/ai-summary")]
-    public ApiResponse AiSummary(int id) => ApiResponse.Ok(new { aiStatus = "NotEnabled", message = "AI 摘要功能尚未启用" });
+    public async Task<ApiResponse> AiSummary(int id) => ApiResponse.Ok(await svc.RegenAiAsync(User, id));
 }
 
 [ApiController]

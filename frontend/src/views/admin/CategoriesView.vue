@@ -53,8 +53,8 @@ async function remove(row: Category) {
         <el-table-column prop="sortOrder" label="排序" width="80" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" link type="primary" @click="open(row)">编辑</el-button>
-            <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+            <el-button size="small" link type="primary" @click="open(row as Category)">编辑</el-button>
+            <el-button size="small" link type="danger" @click="remove(row as Category)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

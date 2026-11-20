@@ -54,8 +54,8 @@ async function remove(row: TagItem) {
         <el-table-column prop="usage" label="引用新闻数" width="110" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" link type="primary" @click="open(row)">编辑</el-button>
-            <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+            <el-button size="small" link type="primary" @click="open(row as TagItem)">编辑</el-button>
+            <el-button size="small" link type="danger" @click="remove(row as TagItem)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

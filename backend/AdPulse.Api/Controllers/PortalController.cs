@@ -27,8 +27,8 @@ public class PortalController(PortalService portal, StatsService stats) : Contro
     public async Task<ApiResponse> Home() => ApiResponse.Ok(await portal.HomeAsync());
 
     [HttpGet("news")]
-    public async Task<ApiResponse> News(int? categoryId, string? keyword, int page = 1, int pageSize = 10, string sort = "time")
-        => ApiResponse.Ok(await portal.ListAsync(categoryId, keyword, page, pageSize, sort));
+    public async Task<ApiResponse> News(int? categoryId, string? keyword, int page = 1, int pageSize = 10, string sort = "time", int? tagId = null, string? tag = null)
+        => ApiResponse.Ok(await portal.ListAsync(categoryId, keyword, page, pageSize, sort, tagId, tag));
 
     [HttpGet("news/{id:int}")]
     public async Task<ApiResponse> Detail(int id) => ApiResponse.Ok(await portal.DetailAsync(id));

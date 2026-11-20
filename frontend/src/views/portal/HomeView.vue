@@ -5,7 +5,7 @@ import type { HomeData, StatsData } from '@/types'
 import NewsCard from '@/components/NewsCard.vue'
 import SkeletonList from '@/components/SkeletonList.vue'
 import CountUp from '@/components/CountUp.vue'
-import EChart from '@/components/EChart.vue'
+import SparkLine from '@/components/SparkLine.vue'
 import { fmtNum } from '@/utils/format'
 
 const home = ref<HomeData | null>(null)
@@ -28,15 +28,6 @@ const onTouchEnd = (e: TouchEvent) => {
 
 const feeds = computed(() => home.value?.categoryFeeds ?? [])
 const currentItems = computed(() => feeds.value.find((f) => f.categoryId === activeCat.value)?.items ?? [])
-
-const miniOption = computed(() => ({
-  backgroundColor: 'transparent',
-  grid: { left: 8, right: 8, top: 14, bottom: 8, containLabel: true },
-  tooltip: { trigger: 'axis' },
-  xAxis: { type: 'category', data: stats.value?.marketTrend.months ?? [], axisLabel: { show: false }, axisTick: { show: false }, axisLine: { lineStyle: { color: 'rgba(138,147,166,0.3)' } } },
-  yAxis: { type: 'value', splitLine: { lineStyle: { color: 'rgba(138,147,166,0.15)' } }, axisLabel: { color: '#8a93a6', fontSize: 10 } },
-  series: [{ type: 'line', smooth: true, symbol: 'none', data: stats.value?.marketTrend.values ?? [], lineStyle: { color: '#FF5A1F', width: 2.5 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,90,31,0.35)' }, { offset: 1, color: 'rgba(255,90,31,0)' }] } } }]
-}))
 
 onMounted(async () => {
   try {
@@ -108,7 +99,7 @@ onBeforeUnmount(() => clearInterval(timer))
         </div>
         <div class="card panel">
           <h3 class="panel-title">行业数据速览 <span class="muted demo-note">演示数据</span></h3>
-          <EChart v-if="stats" :option="miniOption" height="180px" />
+          <SparkLine v-if="stats" :values="stats.marketTrend.values" :height="180" />
           <router-link to="/data" class="btn-accent" style="margin-top: 12px">查看完整数据</router-link>
         </div>
       </aside>

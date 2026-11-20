@@ -22,6 +22,7 @@ const aiLabel = computed(() => {
   const s = detail.value?.aiStatus
   if (s === 'Done') return 'AI 摘要'
   if (s === 'Fallback') return '规则生成摘要'
+  if (s === 'Failed') return 'AI 摘要（规则兜底）'
   if (s === 'Pending') return 'AI 摘要生成中…'
   return '编辑摘要'
 })
@@ -58,7 +59,7 @@ function startPolling(id: number) {
   }, 3000)
 }
 
-const goTag = (t: string) => router.push({ path: '/news', query: { keyword: t } })
+const goTag = (t: string) => router.push({ path: '/news', query: { tag: t } })
 
 watch(() => route.params.id, load, { immediate: true })
 onBeforeUnmount(() => clearInterval(pollTimer))
@@ -95,6 +96,7 @@ onBeforeUnmount(() => clearInterval(pollTimer))
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/></svg>
           <span>{{ aiLabel }}</span>
           <span v-if="detail.aiStatus === 'Fallback'" class="muted fallback-note">未配置 AI 密钥，由规则引擎抽取</span>
+          <span v-else-if="detail.aiStatus === 'Failed'" class="muted fallback-note">AI 服务暂不可用，已自动降级为规则摘要</span>
         </div>
         <p>{{ aiText }}</p>
       </div>

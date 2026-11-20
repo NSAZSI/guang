@@ -12,7 +12,7 @@ export const authApi = {
 
 export const portalApi = {
   home: () => get<HomeData>('/portal/home'),
-  list: (params: { categoryId?: number; keyword?: string; page?: number; pageSize?: number; sort?: string; tagId?: number }) =>
+  list: (params: { categoryId?: number; keyword?: string; page?: number; pageSize?: number; sort?: string; tagId?: number; tag?: string }) =>
     get<Paged<NewsItem>>('/portal/news', params as Record<string, unknown>),
   detail: (id: number) => get<NewsDetail>(`/portal/news/${id}`),
   related: (id: number) => get<RelatedItem[]>(`/portal/news/${id}/related`),

@@ -9,21 +9,42 @@ using AdPulse.Api.Repositories;
 using AdPulse.Api.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
+// Serilog 日志路径：生产用环境变量 Serilog__Path 指向 /var/adpulse/logs
+var serilogPath = Environment.GetEnvironmentVariable("Serilog__Path") ?? "logs/adpulse-.log";
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
     .WriteTo.Console()
-    .WriteTo.File("logs/adpulse-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
+    .WriteTo.File(serilogPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
     .CreateLogger();
 
 try
 {
+    // ---------- 运维命令：重置用户密码（部署时改掉演示账号默认密码用） ----------
+    // 用法：dotnet AdPulse.Api.dll --reset-password <用户名> <新密码>
+    if (args.Length >= 3 && args[0] == "--reset-password")
+    {
+        var cs = Environment.GetEnvironmentVariable("ConnectionStrings__Default") ?? "Data Source=App_Data/adpulse.db";
+        var ds = cs.Replace("Data Source=", "", StringComparison.OrdinalIgnoreCase).Trim();
+        if (!Path.IsPathRooted(ds)) ds = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), ds));
+        var opts = new DbContextOptionsBuilder<AppDbContext>().UseSqlite($"Data Source={ds}").Options;
+        using var db = new AppDbContext(opts);
+        var user = db.Users.FirstOrDefault(u => u.UserName == args[1]);
+        if (user is null) { Console.Error.WriteLine($"用户 {args[1]} 不存在"); return 1; }
+        user.PasswordHash = new PasswordHasher<User>().HashPassword(user, args[2]);
+        db.SaveChanges();
+        Console.WriteLine($"已重置 {args[1]} 的密码（PBKDF2 哈希入库，明文不落盘）");
+        return 0;
+    }
+
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
@@ -90,6 +111,19 @@ try
     builder.Services.AddAuthorization(o => o.AddPolicy("AdminOnly", p => p.RequireRole(Roles.Admin)));
 
     // ---------- 三层架构 DI 注册 ----------
+    builder.Services.AddSingleton<SseHub>();
+
+    // ---------- AI 摘要（计划 8）：配置驱动 + 后台队列，无密钥自动降级规则小编 ----------
+    builder.Services.Configure<AiOptions>(builder.Configuration.GetSection("Ai"));
+    builder.Services.AddHttpClient("ai", (sp, c) =>
+    {
+        var opt = sp.GetRequiredService<IOptions<AiOptions>>().Value;
+        c.Timeout = TimeSpan.FromSeconds(Math.Clamp(opt.TimeoutSeconds, 5, 120));
+    });
+    builder.Services.AddSingleton<AiTaskQueue>();
+    builder.Services.AddSingleton<IAiSummaryService, OpenAiSummaryService>();
+    builder.Services.AddHostedService<AiGenerationService>();
+
     builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
     builder.Services.AddScoped<NewsRepository>();
     builder.Services.AddScoped<AuthService>();
@@ -185,6 +219,7 @@ try
 
     Log.Information("AdPulse API 启动完成，数据库：{Db}", dataSource);
     app.Run();
+    return 0;
 }
 catch (Exception ex)
 {

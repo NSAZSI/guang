@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElDrawer } from 'element-plus'
 import { useThemeStore } from '@/stores/theme'
+import NewsFlash from '@/components/NewsFlash.vue'
 
 const theme = useThemeStore()
 const route = useRoute()
@@ -37,6 +38,7 @@ const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.s
           </button>
         </div>
       </div>
+      <NewsFlash />
     </header>
 
     <el-drawer v-model="drawer" direction="rtl" size="72%" :with-header="false">
@@ -83,7 +85,7 @@ const isActive = (to: string) => (to === '/' ? route.path === '/' : route.path.s
 .admin-link { font-size: 13px; color: var(--muted); border: 1px solid var(--line); padding: 7px 14px; border-radius: 9px; transition: all 0.2s; }
 .admin-link:hover { color: var(--accent); border-color: var(--accent); }
 .mobile-menu { display: none; }
-.main { padding-top: 64px; min-height: calc(100vh - 180px); }
+.main { padding-top: 102px; min-height: calc(100vh - 180px); }
 .footer { margin-top: 64px; border-top: 1px solid var(--line); padding: 30px 0 36px; }
 .foot-brand { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--text-strong); margin-bottom: 10px; }
 .footer p { margin: 4px 0; font-size: 13px; }

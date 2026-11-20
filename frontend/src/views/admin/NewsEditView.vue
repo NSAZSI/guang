@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElInput, ElSelect, ElOption, ElSwitch, ElButton, ElUpload, ElMessage, ElTag } from 'element-plus'
 import { adminApi, portalApi } from '@/api/modules'
@@ -60,12 +60,22 @@ async function save(publish: boolean) {
   } finally { saving.value = false }
 }
 
+let aiPoll: ReturnType<typeof setInterval> | undefined
 async function regenAi() {
   if (!editId.value) { ElMessage.info('请先保存新闻后再使用 AI 摘要'); return }
-  const r = await adminApi.aiSummary(editId.value)
-  if (r.aiStatus === 'NotEnabled') ElMessage.info('AI 摘要功能尚未启用（步骤 6 开启）')
-  else { ElMessage.success('已触发 AI 重新生成'); aiStatus.value = 'Pending' }
+  await adminApi.aiSummary(editId.value)
+  ElMessage.success('已触发 AI 重新生成')
+  aiStatus.value = 'Pending'
+  clearInterval(aiPoll)
+  let n = 0
+  aiPoll = setInterval(async () => {
+    if (!editId.value || ++n > 20) { clearInterval(aiPoll); return }
+    const d = await adminApi.newsDetail(editId.value)
+    aiStatus.value = d.aiStatus
+    if (d.aiStatus !== 'Pending') clearInterval(aiPoll)
+  }, 3000)
 }
+onBeforeUnmount(() => clearInterval(aiPoll))
 </script>
 
 <template>

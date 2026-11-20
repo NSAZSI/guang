@@ -37,7 +37,7 @@ async function restore(row: AdminNewsItem) {
         </el-table-column>
         <el-table-column label="操作" width="110">
           <template #default="{ row }">
-            <el-button size="small" type="success" link @click="restore(row)">还原</el-button>
+            <el-button size="small" type="success" link @click="restore(row as AdminNewsItem)">还原</el-button>
           </template>
         </el-table-column>
         <template #empty><el-empty description="回收站是空的" /></template>

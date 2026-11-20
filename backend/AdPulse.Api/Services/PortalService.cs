@@ -46,12 +46,18 @@ public class PortalService(NewsRepository news, IRepository<Category> categories
         return new HomeData(bannerItems, headlines, feeds, hot, counters);
     }
 
-    public async Task<PagedResult<NewsListItem>> ListAsync(int? categoryId, string? keyword, int page, int pageSize, string sort)
+    public async Task<PagedResult<NewsListItem>> ListAsync(int? categoryId, string? keyword, int page, int pageSize, string sort, int? tagId = null, string? tag = null)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 50);
         var q = news.Published();
         if (categoryId is > 0) q = q.Where(n => n.CategoryId == categoryId);
+        if (tagId is > 0) q = q.Where(n => n.NewsTags.Any(nt => nt.TagId == tagId));
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            var tagName = tag.Trim();
+            q = q.Where(n => n.NewsTags.Any(nt => nt.Tag!.Name == tagName));
+        }
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var kw = $"%{keyword.Trim()}%";

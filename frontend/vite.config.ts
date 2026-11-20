@@ -15,5 +15,13 @@ export default defineConfig({
       '/covers': { target: 'http://localhost:5000', changeOrigin: true }
     }
   },
+  preview: {
+    port: 4173,
+    proxy: {
+      '/api': { target: 'http://localhost:5000', changeOrigin: true },
+      '/uploads': { target: 'http://localhost:5000', changeOrigin: true },
+      '/covers': { target: 'http://localhost:5000', changeOrigin: true }
+    }
+  },
   build: { chunkSizeWarningLimit: 1600 }
 })

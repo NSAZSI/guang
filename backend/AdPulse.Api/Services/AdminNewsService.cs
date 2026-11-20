@@ -8,8 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AdPulse.Api.Services;
 
-public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbContext db)
+public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbContext db, SseHub hub, AiTaskQueue aiQueue)
 {
+    private void BroadcastPublished(News n) =>
+        hub.Broadcast("news", new { id = n.Id, title = n.Title, time = DateTime.UtcNow });
     private void EnsureOwnership(News n, ClaimsPrincipal user)
     {
         if (!user.IsAdmin() && n.AuthorId != user.UserId())
@@ -81,12 +83,18 @@ public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbC
             Status = req.Publish ? NewsStatus.Published : NewsStatus.Draft,
             PublishedAt = req.Publish ? now : null,
             IsTop = req.IsTop, IsHeadline = req.IsHeadline,
+            AiStatus = req.Publish ? AiStatus.Pending : AiStatus.None,
             CreatedAt = now, UpdatedAt = now
         };
         foreach (var t in req.TagIds.Distinct()) n.NewsTags.Add(new NewsTag { TagId = t });
         db.News.Add(n);
         Log(user, req.Publish ? "新建并发布新闻" : "新建草稿", n.Id, n.Title);
         await db.SaveChangesAsync();
+        if (req.Publish)
+        {
+            BroadcastPublished(n);
+            aiQueue.Enqueue(n.Id); // AI 摘要异步生成，不阻塞发布（计划 8.2）
+        }
         return n.Id;
     }
 
@@ -100,8 +108,10 @@ public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbC
         n.CategoryId = req.CategoryId; n.IsTop = req.IsTop; n.IsHeadline = req.IsHeadline; n.UpdatedAt = DateTime.UtcNow;
 
         var target = req.Publish ? NewsStatus.Published : NewsStatus.Draft;
+        var wasPublished = n.Status == NewsStatus.Published;
         if (target == NewsStatus.Published && n.Status != NewsStatus.Published) n.PublishedAt = DateTime.UtcNow;
         if (target == NewsStatus.Draft) n.PublishedAt = null;
+        if (target == NewsStatus.Published && !wasPublished) n.AiStatus = AiStatus.Pending;
         n.Status = target;
 
         db.NewsTags.RemoveRange(n.NewsTags);
@@ -110,6 +120,11 @@ public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbC
 
         Log(user, req.Publish ? "编辑并发布新闻" : "编辑草稿", id, n.Title);
         await db.SaveChangesAsync();
+        if (target == NewsStatus.Published && !wasPublished)
+        {
+            BroadcastPublished(n);
+            aiQueue.Enqueue(id);
+        }
     }
 
     public async Task ChangeStatusAsync(ClaimsPrincipal user, int id, string action)
@@ -122,6 +137,7 @@ public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbC
                 if (n.Status == NewsStatus.Published) throw ApiException.BadRequest("该新闻已是发布状态");
                 if (n.Status == NewsStatus.Recycled) throw ApiException.BadRequest("请先从回收站还原");
                 n.Status = NewsStatus.Published; n.PublishedAt = DateTime.UtcNow;
+                n.AiStatus = AiStatus.Pending;
                 break;
             case "unpublish":
                 EnsureOwnership(n, user);
@@ -153,7 +169,26 @@ public class AdminNewsService(NewsRepository news, IRepository<Tag> tags, AppDbC
         };
         Log(user, labels.GetValueOrDefault(action, action), id, n.Title);
         await db.SaveChangesAsync();
+        if (action == "publish")
+        {
+            BroadcastPublished(n);
+            aiQueue.Enqueue(id);
+        }
     }
 
     public Task DeleteAsync(ClaimsPrincipal user, int id) => ChangeStatusAsync(user, id, "recycle");
+
+    /// <summary>手动重新生成 AI 摘要（计划 8.2）：仅作者或 Admin；立即返回 Pending，后台队列异步完成。</summary>
+    public async Task<object> RegenAiAsync(ClaimsPrincipal user, int id)
+    {
+        var n = await news.Query().FirstOrDefaultAsync(x => x.Id == id) ?? throw ApiException.NotFound("新闻不存在");
+        EnsureOwnership(n, user);
+        if (n.Status != NewsStatus.Published) throw ApiException.BadRequest("仅已发布新闻可生成 AI 摘要");
+        n.AiStatus = AiStatus.Pending;
+        n.UpdatedAt = DateTime.UtcNow;
+        Log(user, "重新生成AI摘要", id, n.Title);
+        await db.SaveChangesAsync();
+        aiQueue.Enqueue(id);
+        return new { aiStatus = AiStatus.Pending };
+    }
 }

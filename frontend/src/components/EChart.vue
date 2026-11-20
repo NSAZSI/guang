@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import echarts from './echarts'
+import type { EChartsType, EChartsCoreOption } from 'echarts/core'
 import { useThemeStore } from '@/stores/theme'
 
-const props = withDefaults(defineProps<{ option: Record<string, unknown>; height?: string }>(), { height: '320px' })
+const props = withDefaults(defineProps<{ option: EChartsCoreOption; height?: string }>(), { height: '320px' })
 const el = ref<HTMLDivElement>()
-const chart = shallowRef<echarts.ECharts>()
+const chart = shallowRef<EChartsType>()
 const themeStore = useThemeStore()
 let observer: ResizeObserver | null = null
 

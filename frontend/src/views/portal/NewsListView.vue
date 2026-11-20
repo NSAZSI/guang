@@ -17,12 +17,13 @@ const searchInput = ref('')
 
 const categoryId = computed(() => Number(route.query.category) || 0)
 const keyword = computed(() => String(route.query.keyword || ''))
+const tag = computed(() => String(route.query.tag || ''))
 const sort = computed(() => String(route.query.sort || 'time'))
 const page = computed(() => Number(route.query.page) || 1)
 
 function updateQuery(patch: Record<string, string | number | undefined>) {
   const q: Record<string, string> = {}
-  const merged: Record<string, unknown> = { category: categoryId.value || undefined, keyword: keyword.value || undefined, sort: sort.value !== 'time' ? sort.value : undefined, page: page.value > 1 ? page.value : undefined, ...patch }
+  const merged: Record<string, unknown> = { category: categoryId.value || undefined, keyword: keyword.value || undefined, tag: tag.value || undefined, sort: sort.value !== 'time' ? sort.value : undefined, page: page.value > 1 ? page.value : undefined, ...patch }
   for (const [k, v] of Object.entries(merged)) if (v !== undefined && v !== '' && v !== 0) q[k] = String(v)
   router.replace({ query: q })
 }
@@ -34,6 +35,7 @@ async function load() {
     data.value = await portalApi.list({
       categoryId: categoryId.value || undefined,
       keyword: keyword.value || undefined,
+      tag: tag.value || undefined,
       page: page.value,
       pageSize: 10,
       sort: sort.value
@@ -74,6 +76,13 @@ const doSearch = () => updateQuery({ keyword: searchInput.value.trim() || undefi
       </div>
     </div>
 
+    <div v-if="tag" class="result-info">
+      <span class="tag-filter-chip">✦ 标签：{{ tag }}
+        <button class="tag-x" aria-label="清除标签筛选" @click="updateQuery({ tag: undefined, page: undefined })">✕</button>
+      </span>
+      <span class="muted">共 {{ data?.total ?? 0 }} 条相关新闻</span>
+    </div>
+
     <div v-if="keyword" class="result-info muted">
       搜索 “<span class="accent-text">{{ keyword }}</span>” 共 {{ data?.total ?? 0 }} 条结果
     </div>
@@ -106,6 +115,9 @@ const doSearch = () => updateQuery({ keyword: searchInput.value.trim() || undefi
 .sort button { padding: 8px 16px; border: none; background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; }
 .sort button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .result-info { margin-bottom: 14px; font-size: 13px; }
+.tag-filter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; margin-right: 10px; border-radius: 999px; background: rgba(255, 90, 31, 0.12); border: 1px solid rgba(255, 90, 31, 0.4); color: var(--accent); font-size: 13px; }
+.tag-x { background: none; border: none; color: inherit; cursor: pointer; font-size: 12px; padding: 0 2px; }
+.tag-x:hover { color: var(--text); }
 .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
 .pager { display: flex; justify-content: center; margin-top: 28px; }
 @media (max-width: 767px) {

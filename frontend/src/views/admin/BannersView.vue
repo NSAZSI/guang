@@ -68,12 +68,12 @@ async function remove(row: BannerAdmin) {
         <el-table-column prop="linkNewsTitle" label="关联新闻" min-width="220" show-overflow-tooltip />
         <el-table-column prop="sortOrder" label="排序" width="70" />
         <el-table-column label="启用" width="80">
-          <template #default="{ row }"><el-switch :model-value="row.isEnabled" @change="toggle(row)" /></template>
+          <template #default="{ row }"><el-switch :model-value="row.isEnabled" @change="toggle(row as BannerAdmin)" /></template>
         </el-table-column>
         <el-table-column label="操作" width="140">
           <template #default="{ row }">
-            <el-button size="small" link type="primary" @click="open(row)">编辑</el-button>
-            <el-button size="small" link type="danger" @click="remove(row)">删除</el-button>
+            <el-button size="small" link type="primary" @click="open(row as BannerAdmin)">编辑</el-button>
+            <el-button size="small" link type="danger" @click="remove(row as BannerAdmin)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

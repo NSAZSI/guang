@@ -80,10 +80,10 @@ onMounted(() => { load(); portalApi.categories().then((c) => (categories.value =
         <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
             <el-button size="small" link type="primary" @click="router.push(`/admin/news/${row.id}/edit`)">编辑</el-button>
-            <el-button v-if="row.status === 'Draft'" size="small" link type="success" @click="act(row, 'publish')">发布</el-button>
-            <el-button v-if="row.status === 'Published'" size="small" link type="warning" @click="act(row, 'unpublish')">撤回</el-button>
-            <el-button v-if="row.status === 'Published'" size="small" link @click="act(row, row.isTop ? 'untop' : 'top')">{{ row.isTop ? '取消顶' : '置顶' }}</el-button>
-            <el-button size="small" link type="danger" @click="act(row, 'recycle')">删除</el-button>
+            <el-button v-if="row.status === 'Draft'" size="small" link type="success" @click="act(row as AdminNewsItem, 'publish')">发布</el-button>
+            <el-button v-if="row.status === 'Published'" size="small" link type="warning" @click="act(row as AdminNewsItem, 'unpublish')">撤回</el-button>
+            <el-button v-if="row.status === 'Published'" size="small" link @click="act(row as AdminNewsItem, row.isTop ? 'untop' : 'top')">{{ row.isTop ? '取消顶' : '置顶' }}</el-button>
+            <el-button size="small" link type="danger" @click="act(row as AdminNewsItem, 'recycle')">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
